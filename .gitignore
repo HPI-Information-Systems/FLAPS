@@ -1,0 +1,11 @@
+out/
+!**/src/main/**/out/
+
+.DS_Store
+*.jar
+target/*
+.idea/
+/input_data/
+/results/
+$(project.build.directory)/
+dependency-reduced-pom.xml
