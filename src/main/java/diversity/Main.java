@@ -126,10 +126,9 @@ public class Main {
         }
 
         if (outputMups) {
-            String datasetBaseName = removeCsvExtension(datasetName);
             java.nio.file.Path outputPath = mupsOutput == null
                     ? DEFAULT_MUPS_OUTPUT_DIR.resolve(
-                            "mups_" + datasetBaseName + "_mincov_" + mincov + ".csv")
+                            "mups_" + datasetName + "_mincov_" + mincov + ".csv")
                     : Paths.get(mupsOutput);
             try {
                 MUPWriter.write(outputPath, mups, dataset, df, bitMap);
@@ -142,8 +141,7 @@ public class Main {
 
         String resultsFile = new java.io.File(resultsDir, "results_" + datasetName).getPath();
 
-        String legacyHeader = "dataset,mincov,chunkSize,chunksPerRow,numSamples,numMUPs,samplingSeconds,totalSeconds";
-        String resultsHeader = legacyHeader + ",numCoverageThresholdEvaluations";
+        String resultsHeader = "dataset,mincov,chunkSize,chunksPerRow,numSamples,numMUPs,samplingSeconds,totalSeconds,numCoverageThresholdEvaluations";
 
         try (RandomAccessFile results = new RandomAccessFile(resultsFile, "rw");
              FileChannel channel = results.getChannel();
@@ -151,8 +149,6 @@ public class Main {
 
             if (results.length() == 0) {
                 results.write((resultsHeader + "\n").getBytes(StandardCharsets.UTF_8));
-            } else {
-                migrateLegacyResultsHeader(results, legacyHeader, resultsHeader);
             }
 
             String row = String.format(Locale.US,
@@ -171,31 +167,4 @@ public class Main {
         System.exit(0);
     }
 
-    private static String removeCsvExtension(String fileName) {
-        return fileName.toLowerCase(Locale.ROOT).endsWith(".csv")
-                ? fileName.substring(0, fileName.length() - 4)
-                : fileName;
-    }
-
-    private static void migrateLegacyResultsHeader(
-            RandomAccessFile results,
-            String legacyHeader,
-            String resultsHeader
-    ) throws IOException {
-        results.seek(0);
-        String currentHeader = results.readLine();
-        if (!legacyHeader.equals(currentHeader)) return;
-
-        long remainingLength = results.length() - results.getFilePointer();
-        if (remainingLength > Integer.MAX_VALUE) {
-            throw new IOException("Results file is too large to migrate its header");
-        }
-
-        byte[] existingRows = new byte[(int) remainingLength];
-        results.readFully(existingRows);
-        results.setLength(0);
-        results.seek(0);
-        results.write((resultsHeader + "\n").getBytes(StandardCharsets.UTF_8));
-        results.write(existingRows);
-    }
 }
