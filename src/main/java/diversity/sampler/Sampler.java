@@ -10,8 +10,6 @@ public interface Sampler {
      */
     void fit(List<BitSet> dataset);
 
-    void fit(List<BitSet> dataset, int size);
-
     /**
      * Get patterns that are guaranteed to be covered.
      */

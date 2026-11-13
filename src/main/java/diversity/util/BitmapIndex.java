@@ -9,16 +9,12 @@ import java.util.*;
 public class BitmapIndex {
 
     private final long[][] bitmapIndex;
-    private final int nFeatures;
     private final int nRows;
     private final int nIndexWords;
-    private final List<BitSet> patterns;
     private final int[] featureSupports;
 
     public BitmapIndex(List<BitSet> dataset, int nBits) {
-        this.patterns = dataset;
         this.nRows = dataset.size();
-        this.nFeatures = nBits;
         this.nIndexWords = (nRows + 63) / 64;
         this.bitmapIndex = new long[nBits][nIndexWords];
         this.featureSupports = new int[nBits];
@@ -36,39 +32,6 @@ public class BitmapIndex {
                 featureSupports[bit]++;
             }
         }
-    }
-
-    private boolean[] findMoreSpecialMask(List<BitSet> A) {
-        boolean[] mask = new boolean[nRows];
-
-        long[] tmp = new long[nIndexWords];
-        for (BitSet a : A) {
-            int firstBit = a.nextSetBit(0);
-            if (firstBit < 0) continue;
-
-            System.arraycopy(getFeatureBitmap(firstBit), 0, tmp, 0, nIndexWords);
-            for (int f = a.nextSetBit(0); f >= 0; f = a.nextSetBit(f + 1)) {
-                if (f == firstBit) continue;
-                long[] featureBitmap = getFeatureBitmap(f);
-                boolean isNonZero = false;
-                for (int w = 0; w < nIndexWords; w++) {
-                    tmp[w] &= featureBitmap[w];
-                    isNonZero |= tmp[w] != 0;
-                }
-                if (!isNonZero) break;
-            }
-
-            for (int w = 0; w < nIndexWords; w++) {
-                long word = tmp[w];
-                while (word != 0) {
-                    int b = Long.numberOfTrailingZeros(word);
-                    int idx = w * 64 + b;
-                    if (idx < nRows) mask[idx] = true;
-                    word &= (word - 1); // clear that bit
-                }
-            }
-        }
-        return mask;
     }
 
     /**
@@ -130,18 +93,6 @@ public class BitmapIndex {
         return support;
     }
 
-    /** Remove all patterns that are more special than something in A */
-    public List<BitSet> removeSpecializations(List<BitSet> A) {
-        if (patterns.isEmpty() || A.isEmpty()) return patterns;
-        boolean[] mask = findMoreSpecialMask(A);
-
-        List<BitSet> filtered = new ArrayList<>();
-        for (int i = 0; i < patterns.size(); i++) {
-            if (!mask[i]) filtered.add(patterns.get(i));
-        }
-        return filtered;
-    }
-
     /**
      * Get the bitmap (long array) for a given feature.
      */
@@ -149,19 +100,8 @@ public class BitmapIndex {
         return bitmapIndex[feature];
     }
 
-    public int getNumFeatures() {
-        return nFeatures;
-    }
-
-    public int getNumRows() {
-        return nRows;
-    }
-
     public int getNumIndexWords() {
         return nIndexWords;
     }
 
-    public int getFeatureSupport(int feature) {
-        return featureSupports[feature];
-    }
 }

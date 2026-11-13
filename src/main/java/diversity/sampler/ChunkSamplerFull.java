@@ -58,11 +58,6 @@ public class ChunkSamplerFull implements Sampler {
     }
 
     @Override
-    public void fit(List<BitSet> dataset, int size) {
-        fit(dataset);
-    }
-
-    @Override
     public Set<BitSet> getCoveredPatterns() {
         return coveredPatterns;
     }

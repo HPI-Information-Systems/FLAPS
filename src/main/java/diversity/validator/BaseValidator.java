@@ -35,26 +35,4 @@ public abstract class BaseValidator implements Validator {
         return coverageThresholdEvaluations;
     }
 
-    protected Map<String, List<BitSet>> filterByMinCov(
-            List<BitSet> unknownPatterns,
-            int[] counts
-    ) {
-        List<BitSet> newlyCovered = new ArrayList<>();
-        List<BitSet> uncovered = new ArrayList<>();
-
-        for (int i = 0; i < unknownPatterns.size(); i++) {
-            BitSet p = unknownPatterns.get(i);
-            if (counts[i] >= this.minCov) {
-                newlyCovered.add(p);
-            } else {
-                uncovered.add(p);
-            }
-        }
-
-        Map<String, List<BitSet>> result = new HashMap<>();
-        result.put("covered", newlyCovered);
-        result.put("uncovered", uncovered);
-        return result;
-    }
-
 }
